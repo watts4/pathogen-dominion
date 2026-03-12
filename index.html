@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pathogen Dominion</title>
+  <!-- Google Font: Press Start 2P for pixel text -->
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="game-container">
+    <!-- TITLE SCREEN -->
+    <div id="title-screen" class="screen active">
+      <div class="title-bg">
+        <canvas id="title-canvas" width="640" height="480"></canvas>
+      </div>
+      <div class="title-menu">
+        <h1 class="game-title">PATHOGEN<br>DOMINION</h1>
+        <p class="subtitle">A Strategy of Survival</p>
+        <div class="menu-buttons">
+          <button class="pixel-btn" id="btn-new-game">NEW GAME</button>
+          <button class="pixel-btn" id="btn-load-game">LOAD GAME</button>
+          <button class="pixel-btn" id="btn-options">OPTIONS</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- FACTION SELECT SCREEN -->
+    <div id="faction-screen" class="screen">
+      <h2 class="screen-title">CHOOSE YOUR PATHOGEN</h2>
+      <div class="faction-layout">
+        <div class="faction-list" id="faction-list">
+          <!-- Populated by JS -->
+        </div>
+        <div class="faction-detail" id="faction-detail">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+      <div class="faction-bottom">
+        <div class="difficulty-select">
+          <span class="label">DIFFICULTY:</span>
+          <button class="diff-btn active" data-diff="easy">EASY</button>
+          <button class="diff-btn" data-diff="normal">NORMAL</button>
+          <button class="diff-btn" data-diff="hard">HARD</button>
+          <button class="diff-btn" data-diff="nightmare">NIGHTMARE</button>
+        </div>
+        <button class="pixel-btn large" id="btn-start-game" disabled>START INFECTION</button>
+      </div>
+    </div>
+
+    <!-- MAIN GAME SCREEN -->
+    <div id="game-screen" class="screen">
+      <!-- TOP: Resource Bar -->
+      <div class="resource-bar" id="resource-bar">
+        <div class="resource" id="res-turn">
+          <span class="res-label">TURN</span>
+          <span class="res-value" id="val-turn">1</span>
+        </div>
+        <div class="resource" id="res-biomass">
+          <span class="res-icon">&#9670;</span>
+          <span class="res-label">BIOMASS</span>
+          <span class="res-value" id="val-biomass">10</span>
+          <div class="res-bar"><div class="res-fill" id="fill-biomass"></div></div>
+        </div>
+        <div class="resource" id="res-replication">
+          <span class="res-icon">&#9889;</span>
+          <span class="res-label">REPLICATION</span>
+          <span class="res-value" id="val-replication">5</span>
+          <div class="res-bar"><div class="res-fill" id="fill-replication"></div></div>
+        </div>
+        <div class="resource" id="res-diversity">
+          <span class="res-icon">&#129516;</span>
+          <span class="res-label">DIVERSITY</span>
+          <span class="res-value" id="val-diversity">3</span>
+          <div class="res-bar"><div class="res-fill" id="fill-diversity"></div></div>
+        </div>
+        <div class="resource" id="res-stealth">
+          <span class="res-icon">&#128065;</span>
+          <span class="res-label">STEALTH</span>
+          <span class="res-value" id="val-stealth">50</span>
+          <div class="res-bar"><div class="res-fill" id="fill-stealth"></div></div>
+        </div>
+        <div class="resource" id="res-energy">
+          <span class="res-icon">&#11041;</span>
+          <span class="res-label">ENERGY</span>
+          <span class="res-value" id="val-energy">10</span>
+          <div class="res-bar"><div class="res-fill" id="fill-energy"></div></div>
+        </div>
+        <div class="resource alert-display" id="res-alert">
+          <span class="res-icon">&#128737;</span>
+          <span class="res-label">IMMUNE ALERT</span>
+          <span class="res-value" id="val-alert">0</span>
+          <div class="res-bar alert-bar"><div class="res-fill" id="fill-alert"></div></div>
+        </div>
+      </div>
+
+      <!-- MIDDLE: Map + Sidebar -->
+      <div class="game-layout">
+        <div class="map-container">
+          <canvas id="game-canvas" width="640" height="480"></canvas>
+          <div id="scanline-overlay" class="scanlines hidden"></div>
+        </div>
+        <div class="sidebar">
+          <div class="panel region-panel" id="region-panel">
+            <h3 class="panel-title" id="region-name">Select a Region</h3>
+            <div id="region-content">
+              <!-- Populated by JS -->
+            </div>
+          </div>
+          <div class="panel action-panel" id="action-panel">
+            <div id="action-buttons">
+              <!-- Populated by JS -->
+            </div>
+            <div class="bottom-actions">
+              <button class="pixel-btn" id="btn-research">RESEARCH</button>
+              <button class="pixel-btn" id="btn-overview">OVERVIEW</button>
+              <button class="pixel-btn end-turn" id="btn-end-turn">END TURN</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- BOTTOM: Log -->
+      <div class="log-bar" id="log-bar">
+        <div class="log-content" id="log-content">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+    </div>
+
+    <!-- RESEARCH PANEL (overlay) -->
+    <div id="research-panel" class="overlay-panel hidden">
+      <div class="overlay-content">
+        <div class="overlay-header">
+          <h2>MUTATION LAB</h2>
+          <button class="pixel-btn small" id="btn-close-research">&#10005;</button>
+        </div>
+        <div class="research-layout">
+          <div class="research-categories" id="research-categories">
+            <!-- Category tabs -->
+          </div>
+          <div class="research-tree" id="research-tree">
+            <!-- Research items grid -->
+          </div>
+          <div class="research-detail" id="research-detail">
+            <!-- Selected research detail -->
+          </div>
+        </div>
+        <div class="research-current" id="research-current">
+          <!-- Currently researching -->
+        </div>
+      </div>
+    </div>
+
+    <!-- OVERVIEW PANEL (overlay) -->
+    <div id="overview-panel" class="overlay-panel hidden">
+      <div class="overlay-content">
+        <div class="overlay-header">
+          <h2>INFECTION OVERVIEW</h2>
+          <button class="pixel-btn small" id="btn-close-overview">&#10005;</button>
+        </div>
+        <div id="overview-content">
+          <!-- Stats, region list, victory progress -->
+        </div>
+      </div>
+    </div>
+
+    <!-- EVENT POPUP -->
+    <div id="event-popup" class="popup hidden">
+      <div class="popup-content">
+        <h3 id="event-title"></h3>
+        <p id="event-description"></p>
+        <div id="event-effects"></div>
+        <div id="event-choices"></div>
+        <button class="pixel-btn" id="btn-event-ok">OK</button>
+      </div>
+    </div>
+
+    <!-- OPTIONS PANEL -->
+    <div id="options-panel" class="overlay-panel hidden">
+      <div class="overlay-content">
+        <div class="overlay-header">
+          <h2>OPTIONS</h2>
+          <button class="pixel-btn small" id="btn-close-options">&#10005;</button>
+        </div>
+        <div class="options-list">
+          <label class="option-row">
+            <span>Scanlines</span>
+            <input type="checkbox" id="opt-scanlines">
+          </label>
+          <label class="option-row">
+            <span>CRT Effect</span>
+            <input type="checkbox" id="opt-crt">
+          </label>
+          <label class="option-row">
+            <span>Animation Speed</span>
+            <select id="opt-anim-speed">
+              <option value="slow">Slow</option>
+              <option value="normal" selected>Normal</option>
+              <option value="fast">Fast</option>
+            </select>
+          </label>
+          <div class="option-row">
+            <button class="pixel-btn" id="btn-save-game">SAVE GAME</button>
+            <button class="pixel-btn" id="btn-export-save">EXPORT SAVE</button>
+            <button class="pixel-btn" id="btn-import-save">IMPORT SAVE</button>
+          </div>
+          <div class="option-row">
+            <button class="pixel-btn" id="btn-quit-to-title">QUIT TO TITLE</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- NOTIFICATION AREA -->
+    <div id="notifications"></div>
+
+    <!-- VICTORY/DEFEAT SCREENS -->
+    <div id="victory-screen" class="screen">
+      <div class="endgame-content">
+        <h1 class="victory-title">DOMINION ACHIEVED</h1>
+        <div id="victory-stats"></div>
+        <button class="pixel-btn large" id="btn-play-again">PLAY AGAIN</button>
+      </div>
+    </div>
+    <div id="defeat-screen" class="screen">
+      <div class="endgame-content">
+        <h1 class="defeat-title" id="defeat-reason">PATHOGEN CLEARED</h1>
+        <div id="defeat-stats"></div>
+        <button class="pixel-btn large" id="btn-try-again">TRY AGAIN</button>
+      </div>
+    </div>
+  </div>
+
+  <input type="file" id="import-file-input" accept=".json" style="display:none">
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
