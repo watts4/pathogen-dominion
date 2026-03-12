@@ -758,47 +758,8 @@ export class Renderer {
   // ════════════════════════════════════════════════════════════════════════
 
   _buildGameDom() {
-    this.uiContainer.innerHTML = '';
-
-    // Resource bar
-    const resBar = document.createElement('div');
-    resBar.id = 'resource-bar';
-    resBar.className = 'pd-panel';
-    this.uiContainer.appendChild(resBar);
-
-    // Region panel
-    const regionPanel = document.createElement('div');
-    regionPanel.id = 'region-panel';
-    regionPanel.className = 'pd-panel';
-    this.uiContainer.appendChild(regionPanel);
-
-    // Log bar
-    const logBar = document.createElement('div');
-    logBar.id = 'log-bar';
-    logBar.className = 'pd-panel';
-    this.uiContainer.appendChild(logBar);
-
-    // Research overlay
-    const researchOl = document.createElement('div');
-    researchOl.id = 'research-overlay';
-    this.uiContainer.appendChild(researchOl);
-
-    // Event popup
-    const eventPopup = document.createElement('div');
-    eventPopup.id = 'event-popup';
-    eventPopup.className = 'pd-panel';
-    this.uiContainer.appendChild(eventPopup);
-
-    // Notification area
-    const notifArea = document.createElement('div');
-    notifArea.id = 'notification-area';
-    this.uiContainer.appendChild(notifArea);
-
-    // Scanline overlay
-    const scanlines = document.createElement('div');
-    scanlines.id = 'scanline-overlay';
-    if (this.scanlineEnabled) scanlines.classList.add('visible');
-    this.uiContainer.appendChild(scanlines);
+    // DOM panels are defined in index.html and managed by main.js.
+    // The renderer only handles canvas rendering.
   }
 
   _hideAllDomPanels() {
@@ -1811,12 +1772,7 @@ export class Renderer {
       this.animationFrame++;
       this.renderMap();
       this.updateParticles();
-      // Update DOM panels every 10 frames to reduce DOM thrash
-      if (this.animationFrame % 10 === 0) {
-        this.updateResourceBar();
-        this.updateRegionPanel();
-        this.updateLog();
-      }
+      // DOM panels are managed by main.js — renderer only handles canvas
       this._rafId = requestAnimationFrame(loop);
     };
     this._rafId = requestAnimationFrame(loop);
@@ -1977,6 +1933,7 @@ export class Renderer {
     const regionId = this.getRegionAtPoint(x, y);
     if (regionId) {
       this.selectedRegion = regionId;
+      if (this.onRegionSelect) this.onRegionSelect(regionId);
     } else {
       this.selectedRegion = null;
     }
