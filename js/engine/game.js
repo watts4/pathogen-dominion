@@ -161,22 +161,25 @@ export class GameEngine {
       };
     }
 
-    // Colonize starting region
-    const startId = faction.startingRegion;
-    if (regions[startId]) {
-      regions[startId].colonization = 20;
-      regions[startId].discovered = true;
-      regions[startId].visible = true;
-      regions[startId].turnsColonized = 1;
-    }
+    // Colonize starting regions (faction.startRegions is an array)
+    const startRegions = faction.startRegions || [];
+    const startId = startRegions[0] || 'pharynx';
+    for (const sid of startRegions) {
+      if (regions[sid]) {
+        regions[sid].colonization = 20;
+        regions[sid].discovered = true;
+        regions[sid].visible = true;
+        regions[sid].turnsColonized = 1;
+      }
 
-    // Reveal adjacent regions
-    const adjacent = ADJACENCY[startId] || [];
-    for (const adj of adjacent) {
-      if (adj.regionId && regions[adj.regionId]) {
-        regions[adj.regionId].visible = true;
-      } else if (typeof adj === 'string' && regions[adj]) {
-        regions[adj].visible = true;
+      // Reveal adjacent regions
+      const adjacent = ADJACENCY[sid] || [];
+      for (const adj of adjacent) {
+        if (adj.regionId && regions[adj.regionId]) {
+          regions[adj.regionId].visible = true;
+        } else if (typeof adj === 'string' && regions[adj]) {
+          regions[adj].visible = true;
+        }
       }
     }
 
@@ -189,9 +192,9 @@ export class GameEngine {
       difficulty,
       resources: {
         biomass: Math.round(10 * resourceMod),
-        replicationCapacity: Math.round((faction.baseReplication || 5) * resourceMod),
+        replicationCapacity: Math.round((faction.stats?.replicationRate || 5) * resourceMod),
         geneticDiversity: Math.round(3 * resourceMod),
-        stealth: faction.baseStealth || 50,
+        stealth: (faction.stats?.stealth || 5) * 10,
         energy: Math.round(10 * resourceMod),
       },
       regions,
@@ -232,7 +235,7 @@ export class GameEngine {
     // Reset event occurrences
     this.eventOccurrences = {};
 
-    this.log(`${faction.name} has established a foothold in the ${startId.replace(/_/g, ' ')}.`, 'system');
+    this.log(`${faction.name} has established a foothold in the ${(startId || '').replace(/_/g, ' ')}.`, 'system');
     this.emit('newGame', { factionId, difficulty });
 
     return this.getState();
