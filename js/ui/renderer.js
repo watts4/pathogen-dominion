@@ -585,8 +585,8 @@ export class Renderer {
         inflammation: 0,
         damage: 0,
         discovered: region.entryPoint,
-        reservoir: false,
-        biofilm: false,
+        isReservoir: false,
+        hasBiofilm: false,
         modifiers: [],
       };
       this.drawRegion(ctx, region, rState);
@@ -871,7 +871,7 @@ export class Renderer {
       ctx.strokeStyle = PAL.warning;
     } else if (highImmune) {
       ctx.strokeStyle = PAL.negative;
-    } else if (rState.reservoir) {
+    } else if (rState.isReservoir) {
       ctx.strokeStyle = PAL.positive;
     } else {
       ctx.strokeStyle = PAL.panelBg;
@@ -900,7 +900,7 @@ export class Renderer {
     }
 
     // Reservoir icon (diamond)
-    if (rState.reservoir) {
+    if (rState.isReservoir) {
       ctx.save();
       ctx.translate(x - radius * 0.5, y - radius * 0.45);
       ctx.rotate(Math.PI / 4);
@@ -910,7 +910,7 @@ export class Renderer {
     }
 
     // Biofilm icon (small shield upper-left)
-    if (rState.biofilm) {
+    if (rState.hasBiofilm) {
       ctx.save();
       ctx.fillStyle = PAL.info;
       ctx.beginPath();
@@ -1187,8 +1187,8 @@ export class Renderer {
 
     // Modifiers / status
     const statuses = [];
-    if (rState.reservoir) statuses.push('RESERVOIR');
-    if (rState.biofilm) statuses.push('BIOFILM');
+    if (rState.isReservoir) statuses.push('RESERVOIR');
+    if (rState.hasBiofilm) statuses.push('BIOFILM');
     if (rState.inflammation > 30) statuses.push('INFLAMED');
     if (rState.damage > 30) statuses.push('DAMAGED');
     if (statuses.length) {
@@ -1301,8 +1301,8 @@ export class Renderer {
       </div>
 
       <div style="margin-top:8px;">
-        ${rState.reservoir ? '<span style="color:' + PAL.positive + ';">[RESERVOIR]</span> ' : ''}
-        ${rState.biofilm ? '<span style="color:' + PAL.info + ';">[BIOFILM]</span> ' : ''}
+        ${rState.isReservoir ? '<span style="color:' + PAL.positive + ';">[RESERVOIR]</span> ' : ''}
+        ${rState.hasBiofilm ? '<span style="color:' + PAL.info + ';">[BIOFILM]</span> ' : ''}
         ${(rState.modifiers || []).map((m) => `<span style="color:${PAL.warning};">[${m}]</span>`).join(' ')}
       </div>
     `;
@@ -1334,12 +1334,12 @@ export class Renderer {
       }
 
       // Establish reservoir
-      if (rState.colonization >= 70 && !rState.reservoir) {
+      if (rState.colonization >= 70 && !rState.isReservoir) {
         actionHtml += `<button class="pd-btn warning" onclick="window.__pdAction('reservoir','${this.selectedRegion}')">RESERVOIR</button>`;
       }
 
       // Biofilm
-      if (rState.colonization >= 40 && !rState.biofilm) {
+      if (rState.colonization >= 40 && !rState.hasBiofilm) {
         actionHtml += `<button class="pd-btn" onclick="window.__pdAction('biofilm','${this.selectedRegion}')">BIOFILM</button>`;
       }
     }
