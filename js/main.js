@@ -166,7 +166,11 @@ class PathogenDominion {
     });
 
     // Save/Load/Export buttons
-    document.getElementById('btn-save-game').addEventListener('click', () => this.saveGame());
+    document.getElementById('btn-save-slot-1').addEventListener('click', () => this.saveGame(1));
+    document.getElementById('btn-save-slot-2').addEventListener('click', () => this.saveGame(2));
+    document.getElementById('btn-load-slot-0').addEventListener('click', () => this.loadGame(0));
+    document.getElementById('btn-load-slot-1').addEventListener('click', () => this.loadGame(1));
+    document.getElementById('btn-load-slot-2').addEventListener('click', () => this.loadGame(2));
     document.getElementById('btn-export-save').addEventListener('click', () => this.exportSave());
     document.getElementById('btn-import-save').addEventListener('click', () => {
       document.getElementById('import-file-input').click();
@@ -200,8 +204,8 @@ class PathogenDominion {
     this.renderer.onRegionSelect = (regionId) => this.onRegionSelect(regionId);
     this.renderer.onRegionAction = (action, regionId) => this.onRegionAction(action, regionId);
 
-    // Keyboard shortcuts
-    document.addEventListener('keydown', (e) => {
+    // Keyboard shortcuts — store reference so it can be removed on teardown
+    this._keydownHandler = (e) => {
       if (e.key === 'Escape') {
         // Close any open overlay
         document.querySelectorAll('.overlay-panel').forEach(p => p.classList.add('hidden'));
@@ -225,7 +229,8 @@ class PathogenDominion {
         if (document.querySelectorAll('.overlay-panel:not(.hidden)').length > 0) return;
         this.endTurn();
       }
-    });
+    };
+    document.addEventListener('keydown', this._keydownHandler);
   }
 
   setupEventHandlers() {
@@ -266,6 +271,9 @@ class PathogenDominion {
     if (!this.engine.state || this.engine.state.gameOver) return;
 
     const result = this.engine.endTurn();
+
+    // Autosave to slot 0 on every turn end
+    this.saveGame(0, { silent: true });
 
     // Show events if any
     if (result.events && result.events.length > 0) {
@@ -677,15 +685,31 @@ class PathogenDominion {
     document.getElementById('options-panel').classList.remove('hidden');
   }
 
-  // Save/Load
-  saveGame() {
-    if (!this.engine.state) return;
-    localStorage.setItem('pathogen_dominion_save', JSON.stringify(this.engine.state));
-    this.addNotification('Game saved!', 'good');
+  // Save/Load — multi-slot support (slot 0 = autosave, slots 1–2 = manual)
+  _slotKey(slot) {
+    return `pathogen_dominion_save_${slot}`;
   }
 
-  loadGame() {
-    const saved = localStorage.getItem('pathogen_dominion_save');
+  saveGame(slot = 1, { silent = false } = {}) {
+    if (!this.engine.state) return;
+    localStorage.setItem(this._slotKey(slot), JSON.stringify(this.engine.state));
+    this.updateSlotUI();
+    if (!silent) {
+      const label = slot === 0 ? 'Autosave' : `Slot ${slot}`;
+      this.addNotification(`Game saved (${label})!`, 'good');
+    }
+  }
+
+  loadGame(slot = null) {
+    // If no slot given, pick the most recently written one
+    if (slot === null) {
+      slot = [0, 1, 2].find(s => localStorage.getItem(this._slotKey(s))) ?? null;
+    }
+    if (slot === null) {
+      this.addNotification('No saved game found', 'bad');
+      return;
+    }
+    const saved = localStorage.getItem(this._slotKey(slot));
     if (saved) {
       try {
         const state = JSON.parse(saved);
@@ -694,13 +718,32 @@ class PathogenDominion {
         this.renderer.showGameScreen();
         this.renderer.startRenderLoop();
         this.updateUI();
-        this.addNotification('Game loaded!', 'good');
+        const label = slot === 0 ? 'Autosave' : `Slot ${slot}`;
+        this.addNotification(`Game loaded (${label})!`, 'good');
       } catch (e) {
         this.addNotification('Failed to load save!', 'bad');
       }
     } else {
-      this.addNotification('No saved game found', 'bad');
+      this.addNotification('That slot is empty', 'bad');
     }
+  }
+
+  updateSlotUI() {
+    // Update load button states and slot labels in options panel
+    [0, 1, 2].forEach(slot => {
+      const loadBtn = document.getElementById(`btn-load-slot-${slot}`);
+      const labelEl = document.getElementById(`slot-label-${slot}`);
+      const saved = localStorage.getItem(this._slotKey(slot));
+      if (loadBtn) loadBtn.disabled = !saved;
+      if (labelEl && saved) {
+        try {
+          const state = JSON.parse(saved);
+          labelEl.textContent = `T${state.turn} · ${state.faction?.name || '?'}`;
+        } catch { /* ignore */ }
+      } else if (labelEl) {
+        labelEl.textContent = 'Empty';
+      }
+    });
   }
 
   exportSave() {
@@ -737,12 +780,9 @@ class PathogenDominion {
   }
 
   checkForSavedGame() {
-    const saved = localStorage.getItem('pathogen_dominion_save');
-    if (saved) {
-      document.getElementById('btn-load-game').disabled = false;
-    } else {
-      document.getElementById('btn-load-game').disabled = true;
-    }
+    const hasAnySave = [0, 1, 2].some(s => localStorage.getItem(this._slotKey(s)));
+    document.getElementById('btn-load-game').disabled = !hasAnySave;
+    this.updateSlotUI();
   }
 }
 
